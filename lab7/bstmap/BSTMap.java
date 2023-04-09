@@ -8,7 +8,7 @@ import java.util.Iterator;
 import java.util.Set;
 
 public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
-    public Node root;
+    private Node root;
 
 
     private class Node<K, V> {
@@ -39,9 +39,11 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         this.root = null;
     }
 
-    public BSTMap(K key, V value) {
+    /*public BSTMap(K key, V value) {
         root = new Node(key, value);
     }
+
+     */
 
     /** Remove all of the mappings from this map. */
     @Override
@@ -69,7 +71,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         int cmp = key.compareTo((K) n.key);
         if (cmp < 0) {
             result = containsKey(key, n.left);
-        } else if(cmp > 0) {
+        } else if (cmp > 0) {
             result = containsKey(key, n.right);
         } else {
             result = n;
@@ -83,7 +85,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
      */
     @Override
     public V get(K key) {
-       return get(root, key);
+        return get(root, key);
     }
 
     private V get(Node x, K key) {
@@ -96,7 +98,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         int cmp = key.compareTo((K) x.key);
         if (cmp < 0) {
             return (V) get(x.left, key);
-        } else if(cmp > 0) {
+        } else if (cmp > 0) {
             return (V) get(x.right, key);
         } else {
             return (V) x.value;
@@ -133,7 +135,7 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         int cmp = key.compareTo((K) n.key);
         if (cmp < 0) {
             n.left = put(key, value, n.left);
-        } else if(cmp > 0) {
+        } else if (cmp > 0) {
             n.right = put(key, value, n.right);
         } else {
             n.value = value;
@@ -142,7 +144,11 @@ public class BSTMap<K extends Comparable<K>, V> implements Map61B<K, V> {
         return n;
     }
 
-    public  void printInOrder(Node x) {
+    public void printInOrder() {
+        printInOrder(root);
+    }
+
+    private void printInOrder(Node x) {
         if (x == null) {
             return;
         }
