@@ -150,7 +150,7 @@ public class MyHashMap<K, V> implements Map61B<K, V> {
         return size;
     }
 
-    public int hash(K key) {
+    private int hash(K key) {
         return (key.hashCode() & 0x7fffffff) % initialSize;
     }
     @Override
