@@ -1,0 +1,7 @@
+Enter # strings to insert into each map: hell
+Please enter a positive integer: 100000
+class hashmap.MyHashMapALBuckets: 3.32 sec
+class hashmap.MyHashMapLLBuckets: 4.88 sec
+class hashmap.MyHashMapTSBuckets: 14.02 sec
+class hashmap.MyHashMapHSBuckets: 16.90 sec
+class hashmap.MyHashMapPQBuckets: 9.79 sec
