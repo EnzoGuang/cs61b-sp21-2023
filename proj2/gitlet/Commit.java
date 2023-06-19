@@ -4,8 +4,8 @@ package gitlet;
 
 import java.util.Date; // TODO: You'll likely use this in this class
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.io.Serializable;
+import java.util.TreeMap;
 
 /** Represents a gitlet commit object.
  *  TODO: It's a good idea to give a description here of what else this Class
@@ -13,7 +13,7 @@ import java.io.Serializable;
  *
  *  @author EnzoGuang
  */
-public class Commit implements Serializable {
+public class Commit implements Serializable, Dumpable {
     /**
      * TODO: add instance variables here.
      *
@@ -25,7 +25,7 @@ public class Commit implements Serializable {
     /** The message of this Commit. */
     private final String message;
     private String timestamp;
-    private LinkedHashMap<String, String> fileBlob = new LinkedHashMap<>();
+    private TreeMap<String, String> fileBlob = new TreeMap<>();
     private ArrayList<String> parentId = new ArrayList<>();
     private String commitId;
 
@@ -35,9 +35,10 @@ public class Commit implements Serializable {
         this.commitId = Utils.sha1(this.toString());
     }
 
-    public Commit(String message, String parentId) {
+    public Commit(String message, String parentId, TreeMap<String, String> file) {
         this.message = message;
         this.timestamp = new Date().toString();
+        this.fileBlob = file;
         this.parentId.add(this.parentId.size(), parentId);
         this.commitId = Utils.sha1(this.toString());
     }
@@ -45,7 +46,7 @@ public class Commit implements Serializable {
 
     @Override
     public String toString() {
-        return message + timestamp + fileBlob + parentId ;
+        return message + timestamp + fileBlob + parentId;
     }
 
     public String getMessage() {
@@ -56,7 +57,7 @@ public class Commit implements Serializable {
         return timestamp;
     }
 
-    public LinkedHashMap<String, String> getFileBlob() {
+    public TreeMap<String, String> getFileBlob() {
         return fileBlob;
     }
 
@@ -66,5 +67,13 @@ public class Commit implements Serializable {
 
     public String getCommitId() {
         return commitId;
+    }
+
+    @Override
+    public void dump() {
+        System.out.println("\n-----------");
+        System.out.println("message: " + message + "\n" + "timestamp: " + timestamp
+                + "\n" + "fileBlob: " + fileBlob + "\n" + "parentId: " + parentId
+                + "\n" + "commitId: " + commitId);
     }
 }

@@ -16,9 +16,8 @@ public class Main {
             System.exit(0);
         }
         String firstArg = args[0];
-        switch(firstArg) {
+        switch (firstArg) {
             case "init":
-                // TODO: handle the `init` command
                 validateNumArgs(args, 1);
                 Repository.init();
                 break;
@@ -26,11 +25,13 @@ public class Main {
                 isGitletRepo();
                 // TODO: handle the `add [filename]` command
                 validateNumArgs(args, 2);
+                Repository.add(args[1]);
                 break;
             // TODO: FILL THE REST IN
             case "commit":
                 isGitletRepo();
                 validateNumArgs(args, 2);
+                Repository.commit(args[1]);
                 break;
             case "rm":
                 isGitletRepo();
