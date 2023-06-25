@@ -3,6 +3,7 @@ package gitlet;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.TreeMap;
 import static gitlet.Utils.*;
 
@@ -92,9 +93,9 @@ public class Repository {
         Utils.writeContents(activeBranch, hash);
     }
 
-    /** command init
-     *  Usage: java gitlet.Main init
-     *  Creates a new Gitlet version-control system in the current directory.
+    /**@Command: init
+     * @Usage: java gitlet.Main init
+     * @Description: Creates a new Gitlet version-control system in the current directory.
      * @throws IOException
      */
     public static void init() throws IOException {
@@ -166,8 +167,8 @@ public class Repository {
         return file;
     }
 
-    /** command add
-     *  Usage: java gitlet.Main add [file name]
+    /**@Command: add
+     * @Usage: java gitlet.Main add [file name]
      *  Adds a copy of file as it currently exists to the staging area.
      * @param filename
      */
@@ -223,9 +224,9 @@ public class Repository {
         return sha1(fileName + content);
     }
 
-    /** command commit
-     *  Usage: java gitlet.Main commit [message]
-     *  Saves  a snapshot of tracked files in the current commit and staging area.
+    /**@Command: commit
+     * @Usage: java gitlet.Main commit [message]
+     * @Description: Saves  a snapshot of tracked files in the current commit and staging area.
      * @param message a log message that describe the changes to the files.
      * @throws IOException
      */
@@ -233,7 +234,7 @@ public class Repository {
         System.out.println("previous commitId: " + getHeadHashCode());
         Commit previousCommit = deSerializeCommit(getHeadHashCode());
         TreeMap<String, String> fileMap = previousCommit.getFileBlob();
-        if (STAGED_INDEX.list().length == 0) {
+        if (STAGED_INDEX.list().length == 0 && REMOVED_INDEX.list().length == 0) {
             System.out.println("No changes added to the commit");
             System.exit(0);
         }
@@ -248,14 +249,19 @@ public class Repository {
             File toBeDeleted = Utils.join(STAGED_INDEX, stagedFileName);
             toBeDeleted.delete();
         }
+        for (String removedFileName: Utils.plainFilenamesIn(REMOVED_INDEX)) {
+            fileMap.remove(removedFileName);
+            File toBeDeleted = Utils.join(REMOVED_INDEX, removedFileName);
+            toBeDeleted.delete();
+        }
         Commit newCommit = new Commit(message, getHeadHashCode(), fileMap);
         updateHeadHashCode(newCommit.getCommitId());
         serializeCommit(newCommit);
     }
 
-    /** command log
-     *  Usage: java gitlet.Main log
-     *  Starting at the current head commit, display information about each commit
+    /**@Command: log
+     * @Usage: java gitlet.Main log
+     * @Description: Starting at the current head commit, display information about each commit
      *  backwards along the commit tree.
      * @throws IOException
      */
@@ -285,7 +291,7 @@ public class Repository {
         System.out.println();
     }
 
-    public static void status() {
+    public static void status() throws IOException {
         System.out.println("=== Branches ===");
         for (String branchName: Utils.plainFilenamesIn(REFS)) {
             File file = Utils.join(REFS, branchName);
@@ -295,13 +301,200 @@ public class Repository {
             }
             System.out.println(branchName);
         }
-        System.out.print("\n\n");
+        System.out.println();
         System.out.println("=== Staged Files ===");
         for (String fileStaged: Utils.plainFilenamesIn(STAGED_INDEX)) {
             System.out.println(fileStaged);
         }
-        System.out.print("\n\n");
+        System.out.println();
+        System.out.println("=== Removed Files ===");
+        for (String fileRemoved: Utils.plainFilenamesIn(REMOVED_INDEX)) {
+            System.out.println(fileRemoved);
+        }
+        System.out.println();
+        System.out.println("=== Modifications Not Staged For Commit ===");
+        Commit currentCommit = deSerializeCommit(getHeadHashCode());
+        TreeMap<String, String> fileBlob = currentCommit.getFileBlob();
+        for (String filename: fileBlob.keySet()) {
+            File cwdFilePath = Utils.join(CWD, filename);
+            if (cwdFilePath.exists()) {
+                String fileContent = Utils.readContentsAsString(cwdFilePath);
+                String hashOfcwdFile = calcHashOfFile(filename, fileContent);
+                if (Utils.plainFilenamesIn(STAGED_INDEX).contains(filename)) {
+                    File stagedFilePath = Utils.join(STAGED_INDEX, filename);
+                    String stagedFileContent = Utils.readContentsAsString(stagedFilePath);
+                    String hashOfStagedFile = calcHashOfFile(filename, stagedFileContent);
+                    if (!hashOfStagedFile.equals(hashOfcwdFile)) {
+                        System.out.println(filename + " (modified)");
+                    }
+                } else {
+                    if (!hashOfcwdFile.equals(fileBlob.get(filename))) {
+                        System.out.println(filename + " (modified)");
+                    }
+                }
+            } else {
+                System.out.println(filename + " (deleted)");
+            }
+        }
+        for (String filename: plainFilenamesIn(STAGED_INDEX)) {
+            if (!fileBlob.containsKey(filename)) {
+                File stagedFilePath = Utils.join(STAGED_INDEX, filename);
+                File cwdFilePath = Utils.join(CWD, filename);
+                String stagedFileContent = Utils.readContentsAsString(stagedFilePath);
+                String cwdFileContent = Utils.readContentsAsString(cwdFilePath);
+                String hashOfStaged = sha1(filename + stagedFileContent);
+                String hashOfCwd = sha1(filename + cwdFileContent);
+                if (!hashOfCwd.equals(hashOfStaged)) {
+//                    System.out.println(filename + " (not track in current commit but track " +
+//                            "next commit and content is different with staged version");
+                    System.out.println(filename);
+                }
+            }
+        }
+
+        System.out.println();
+        System.out.println("=== Untracked Files ===");
+        for (String cwdFile: Utils.plainFilenamesIn(CWD)) {
+            boolean stageAreaContain = plainFilenamesIn(STAGED_INDEX).contains(cwdFile);
+            if (!fileBlob.containsKey(cwdFile) && !stageAreaContain) {
+                System.out.println(cwdFile);
+            }
+        }
+        System.out.println();
         // TODO
 
+    }
+
+    /**@Command: rm
+     * @Usage: java gitlet.Main rm [file name]
+     * @Description: Unstage the file if it is currently staged for addition.If the file is
+     *  tracked in the current commit. Staged it for removal and remove the file
+     *  from the cwd.
+     * @Failure: If the file is neither staged nor tracked by the head commit, print
+     * the error message "No reason to remove the file."
+     */
+    public static void rm(String filename) throws IOException {
+        int failureCase = 0;
+        boolean isStaged = Utils.plainFilenamesIn(STAGED_INDEX).contains(filename);
+        if (isStaged) {
+            failureCase++;
+            File filepath = Utils.join(STAGED_INDEX, filename);
+            filepath.delete();
+        }
+        Commit previousCommit = deSerializeCommit(getHeadHashCode());
+        TreeMap<String, String> fileBlob = previousCommit.getFileBlob();
+        File removePath = Utils.join(REMOVED_INDEX, filename);
+        if (fileBlob.containsKey(filename)) {
+            failureCase++;
+            writeContents(removePath, "");
+            File cwdFilePath = Utils.join(CWD, filename);
+            if (cwdFilePath.exists()) {
+                cwdFilePath.delete();
+            }
+        }
+        if (failureCase == 0) {
+            System.out.println("No reason to remove the file.");
+        }
+    }
+
+    /**@Command: global-log
+     * @Usage: java gitlet.Main global-log
+     */
+    public static void globalLog() throws IOException {
+        String[] content = COMMIT_OBJECTS.list();
+        Arrays.sort(content);
+        for (String parentDir: content) {
+            File subFilePath = Utils.join(COMMIT_OBJECTS, parentDir);
+            for (String subDir: Utils.plainFilenamesIn(subFilePath)) {
+                Commit currentCommit = deSerializeCommit(parentDir + subDir);
+                printLogMessage(currentCommit);
+            }
+        }
+    }
+
+    /**@Command: find
+     * @Usage: java gitlet.Main find
+     * @Description: prints out the hash of all commit that have the given commit
+     * message, one per line.
+     * @Failure: print the error message "Found no commit with that message."
+     * @param message
+     * @throws IOException
+     */
+    public static void find(String message) throws IOException {
+        boolean isExists = false;
+        for (String parentDir: COMMIT_OBJECTS.list()) {
+            File path = Utils.join(COMMIT_OBJECTS, parentDir);
+            for (String subDir: Utils.plainFilenamesIn(path)) {
+                Commit currentCommit = deSerializeCommit(parentDir + subDir);
+                if (currentCommit.getMessage().contains(message)) {
+                    isExists = true;
+                    System.out.println(currentCommit.getCommitId());
+                }
+            }
+        }
+        if (!isExists) {
+            System.out.println("Found no commit with that message.");
+        }
+    }
+
+    /**@Command: checkout
+     * @Usage: <br>
+     * 1. java gitlet.Main checkout -- [file name] <br>
+     * 2. java gitlet.Main checkout [commit id] -- [file name] <br>
+     * 3. java gitlet.Main checkout [branch name]
+     * @Description:
+     * 1. Takes the version of tile as it exists in the head commit,
+     * and puts it in the working directory.<br>
+     * 2. Takes the version of the file
+     * as it exists in the commit with the given id. <br>
+     * 3. Takes all files in the commit at the head of the given branch, and puts
+     * them in the working directory, overwriting the versions of the files that
+     * are already there if they exist.
+     * @param flag There are three options<br>
+     *             "1" represent the usage 1<br>
+     *             "2" represent the usage 2<br>
+     *             "3" represent the usage 3<br>
+     */
+    public static void checkout(String[] args, int flag) throws IOException {
+        if (flag == 1) {
+            checkoutFile(getHeadHashCode(), args[2]);
+        } else if (flag == 2) {
+            boolean exists = isCommitExists(args[1]);
+            if (!exists) {
+                System.out.println("No commit with that id exists");
+                System.exit(0);
+            }
+            checkoutFile(args[1], args[3]);
+        } else if (flag == 3) {
+            // TODO
+        }
+    }
+
+    private static void checkoutFile(String commitId, String filename) throws IOException {
+        Commit currentCommit = deSerializeCommit(commitId);
+        TreeMap<String, String> fileBlob = currentCommit.getFileBlob();
+        if (!fileBlob.containsKey(filename)) {
+            System.out.println("File does not exist in that commit.");
+        } else {
+            File toBeReplacedFile = Utils.join(CWD, filename);
+            String hashOfCheckoutFile = fileBlob.get(filename);
+            File checkoutFile = getObjectPath(hashOfCheckoutFile, BLOB_OBJECTS);
+            toBeReplacedFile.delete();
+            String content = readContentsAsString(checkoutFile);
+            Utils.writeContents(toBeReplacedFile, content);
+        }
+    }
+
+    /** Estimate the commit whether exists. */
+    private static boolean isCommitExists(String commitId) {
+        File commitPath = Utils.join(COMMIT_OBJECTS, commitId.substring(0, 2));
+        if (!commitPath.exists()) {
+            return false;
+        }
+        File subPath = Utils.join(commitPath, commitId.substring(2));
+        if (!subPath.exists()) {
+            return false;
+        }
+        return true;
     }
 }

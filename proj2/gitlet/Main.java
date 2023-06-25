@@ -23,11 +23,9 @@ public class Main {
                 break;
             case "add":
                 isGitletRepo();
-                // TODO: handle the `add [filename]` command
                 validateNumArgs(args, 2);
                 Repository.add(args[1]);
                 break;
-            // TODO: FILL THE REST IN
             case "commit":
                 isGitletRepo();
                 validateNumArgs(args, 2);
@@ -36,6 +34,7 @@ public class Main {
             case "rm":
                 isGitletRepo();
                 validateNumArgs(args, 2);
+                Repository.rm(args[1]);
                 break;
             case "log":
                 isGitletRepo();
@@ -45,10 +44,12 @@ public class Main {
             case "global-log":
                 isGitletRepo();
                 validateNumArgs(args, 1);
+                Repository.globalLog();
                 break;
             case "find":
                 isGitletRepo();
                 validateNumArgs(args, 2);
+                Repository.find(args[1]);
                 break;
             case "status":
                 isGitletRepo();
@@ -57,7 +58,8 @@ public class Main {
                 break;
             case "checkout":
                 isGitletRepo();
-                validateCheckout(args);
+                int flag = validateCheckout(args);
+                Repository.checkout(args, flag);
                 break;
             case "branch":
                 isGitletRepo();
@@ -94,19 +96,22 @@ public class Main {
     }
 
     /** Check the number of arguments of different usage of checkout.
-     * usage:
-     *  1.  java gitlet.Main checkout -- [file name]
-     *  2.  java gitlet.Main checkout [commit id] -- [fil name]
-     *  3.  java gitlet.Main chekcout [branch name]
+     * @usage:<br>
+     *  1.  java gitlet.Main checkout -- [file name]<br>
+     *  2.  java gitlet.Main checkout [commit id] -- [fil name]<br>
+     *  3.  java gitlet.Main chekcout [branch name]<br>
      * @param args
      */
-    private static void validateCheckout(String[] args) {
-        if (args.length >= 2 && args[1].equals("--")) {
+    private static int validateCheckout(String[] args) {
+        if (args.length > 2 && args[1].equals("--")) {
             validateNumArgs(args, 3);
+            return 1;
         } else if (args.length > 3 && args[2].equals("--")) {
             validateNumArgs(args, 4);
+            return 2;
         } else {
             validateNumArgs(args, 2);
+            return 3;
         }
     }
 
