@@ -2,6 +2,7 @@ package gitlet;
 
 // TODO: any imports you need here
 
+import java.text.SimpleDateFormat;
 import java.util.Date; // TODO: You'll likely use this in this class
 import java.util.ArrayList;
 import java.io.Serializable;
@@ -31,13 +32,17 @@ public class Commit implements Serializable, Dumpable {
 
     public Commit(String message) {
         this.message = message;
-        this.timestamp = new Date(0).toString();
+        Date date = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("E MMM dd HH:mm:ss yyyy Z");
+        this.timestamp = format.format(date);
         this.commitId = Utils.sha1(this.toString());
     }
 
     public Commit(String message, String parentId, TreeMap<String, String> file) {
         this.message = message;
-        this.timestamp = new Date().toString();
+        Date date = new Date();
+        SimpleDateFormat format = new SimpleDateFormat("E MMM dd HH:mm:ss yyyy Z");
+        this.timestamp = format.format(date);
         this.fileBlob = file;
         this.parentId.add(this.parentId.size(), parentId);
         this.commitId = Utils.sha1(this.toString());

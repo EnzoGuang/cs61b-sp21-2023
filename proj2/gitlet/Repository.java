@@ -231,7 +231,6 @@ public class Repository {
      * @throws IOException
      */
     public static void commit(String message) throws IOException {
-        System.out.println("previous commitId: " + getHeadHashCode());
         Commit previousCommit = deSerializeCommit(getHeadHashCode());
         TreeMap<String, String> fileMap = previousCommit.getFileBlob();
         if (STAGED_INDEX.list().length == 0 && REMOVED_INDEX.list().length == 0) {
