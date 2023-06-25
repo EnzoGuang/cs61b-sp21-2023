@@ -29,7 +29,7 @@ public class Main {
                     break;
                 case "commit":
                     isGitletRepo();
-                    validateNumArgs(args, 2);
+                    validateCommit(args);
                     Repository.commit(args[1]);
                     break;
                 case "rm":
@@ -116,6 +116,15 @@ public class Main {
         } else {
             validateNumArgs(args, 2);
             return 3;
+        }
+    }
+
+    private static void validateCommit(String[] args) {
+        if (args.length == 1) {
+            System.out.println("Please enter a commit message");
+            System.exit(0);
+        } else {
+            validateNumArgs(args, 2);
         }
     }
 

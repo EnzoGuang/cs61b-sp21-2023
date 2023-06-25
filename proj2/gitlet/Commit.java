@@ -32,7 +32,7 @@ public class Commit implements Serializable, Dumpable {
 
     public Commit(String message) {
         this.message = message;
-        Date date = new Date();
+        Date date = new Date(0);
         SimpleDateFormat format = new SimpleDateFormat("E MMM dd HH:mm:ss yyyy Z");
         this.timestamp = format.format(date);
         this.commitId = Utils.sha1(this.toString());

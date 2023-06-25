@@ -458,12 +458,12 @@ public class Repository {
         if (flag == 1) {
             checkoutFile(getHeadHashCode(), args[2]);
         } else if (flag == 2) {
-            boolean exists = isCommitExists(args[1]);
-            if (!exists) {
+            File file = isCommitExists(args[1]);
+            if (!file.exists()) {
                 System.out.println("No commit with that id exists");
                 System.exit(0);
             }
-            checkoutFile(args[1], args[3]);
+            checkoutFile(extendAbbrevious(args[1]), args[3]);
         } else if (flag == 3) {
             // TODO
         }
@@ -484,16 +484,36 @@ public class Repository {
         }
     }
 
-    /** Estimate the commit whether exists. */
-    private static boolean isCommitExists(String commitId) {
-        File commitPath = Utils.join(COMMIT_OBJECTS, commitId.substring(0, 2));
-        if (!commitPath.exists()) {
-            return false;
+    /** Estimate the given commitId whether exists. */
+    private static File isCommitExists(String commitId) {
+        File resultPath = Utils.join(COMMIT_OBJECTS, commitId.substring(0, 2));
+        if (commitId.length() != 40) {
+            if (resultPath.exists()) {
+                String restSubCommitId = commitId.substring(2);
+                for (String temp: plainFilenamesIn(resultPath)) {
+                    if (temp.contains(restSubCommitId)) {
+                        resultPath = Utils.join(resultPath, temp);
+                        break;
+                    }
+                }
+            }
+        } else {
+            resultPath = Utils.join(resultPath, commitId.substring(2));
         }
-        File subPath = Utils.join(commitPath, commitId.substring(2));
-        if (!subPath.exists()) {
-            return false;
+        return resultPath;
+    }
+
+    /** Extend the bits of the commitId. */
+    public static String extendAbbrevious(String commitId) {
+        if (commitId.length() != 40) {
+            File path = Utils.join(COMMIT_OBJECTS, commitId.substring(0, 2));
+            String restSubCommitId = commitId.substring(2);
+            for (String temp: plainFilenamesIn(path)) {
+                if (temp.contains(restSubCommitId)) {
+                    return commitId.substring(0, 2) + temp;
+                }
+            }
         }
-        return true;
+        return commitId;
     }
 }
