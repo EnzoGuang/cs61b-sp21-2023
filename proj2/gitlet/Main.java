@@ -10,76 +10,80 @@ public class Main {
     /** Usage: java gitlet.Main ARGS, where ARGS contains
      *  <COMMAND> <OPERAND1> <OPERAND2> ... 
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         if (args.length == 0) {
             System.out.println("Please enter a command.");
             System.exit(0);
         }
         String firstArg = args[0];
-        switch (firstArg) {
-            case "init":
-                validateNumArgs(args, 1);
-                Repository.init();
-                break;
-            case "add":
-                isGitletRepo();
-                validateNumArgs(args, 2);
-                Repository.add(args[1]);
-                break;
-            case "commit":
-                isGitletRepo();
-                validateNumArgs(args, 2);
-                Repository.commit(args[1]);
-                break;
-            case "rm":
-                isGitletRepo();
-                validateNumArgs(args, 2);
-                Repository.rm(args[1]);
-                break;
-            case "log":
-                isGitletRepo();
-                validateNumArgs(args, 1);
-                Repository.log();
-                break;
-            case "global-log":
-                isGitletRepo();
-                validateNumArgs(args, 1);
-                Repository.globalLog();
-                break;
-            case "find":
-                isGitletRepo();
-                validateNumArgs(args, 2);
-                Repository.find(args[1]);
-                break;
-            case "status":
-                isGitletRepo();
-                validateNumArgs(args, 1);
-                Repository.status();
-                break;
-            case "checkout":
-                isGitletRepo();
-                int flag = validateCheckout(args);
-                Repository.checkout(args, flag);
-                break;
-            case "branch":
-                isGitletRepo();
-                validateNumArgs(args, 2);
-                break;
-            case "rm-branch":
-                isGitletRepo();
-                validateNumArgs(args, 2);
-                break;
-            case "reset":
-                isGitletRepo();
-                validateNumArgs(args, 2);
-                break;
-            case "merge":
-                isGitletRepo();
-                validateNumArgs(args, 2);
-                break;
-            default:
-                System.out.println("No command with that exists.");
-                System.exit(0);
+        try {
+            switch (firstArg) {
+                case "init":
+                    validateNumArgs(args, 1);
+                    Repository.init();
+                    break;
+                case "add":
+                    isGitletRepo();
+                    validateNumArgs(args, 2);
+                    Repository.add(args[1]);
+                    break;
+                case "commit":
+                    isGitletRepo();
+                    validateNumArgs(args, 2);
+                    Repository.commit(args[1]);
+                    break;
+                case "rm":
+                    isGitletRepo();
+                    validateNumArgs(args, 2);
+                    Repository.rm(args[1]);
+                    break;
+                case "log":
+                    isGitletRepo();
+                    validateNumArgs(args, 1);
+                    Repository.log();
+                    break;
+                case "global-log":
+                    isGitletRepo();
+                    validateNumArgs(args, 1);
+                    Repository.globalLog();
+                    break;
+                case "find":
+                    isGitletRepo();
+                    validateNumArgs(args, 2);
+                    Repository.find(args[1]);
+                    break;
+                case "status":
+                    isGitletRepo();
+                    validateNumArgs(args, 1);
+                    Repository.status();
+                    break;
+                case "checkout":
+                    isGitletRepo();
+                    int flag = validateCheckout(args);
+                    Repository.checkout(args, flag);
+                    break;
+                case "branch":
+                    isGitletRepo();
+                    validateNumArgs(args, 2);
+                    break;
+                case "rm-branch":
+                    isGitletRepo();
+                    validateNumArgs(args, 2);
+                    break;
+                case "reset":
+                    isGitletRepo();
+                    validateNumArgs(args, 2);
+                    break;
+                case "merge":
+                    isGitletRepo();
+                    validateNumArgs(args, 2);
+                    break;
+                default:
+                    System.out.println("No command with that exists.");
+                    System.exit(0);
+            }
+        } catch (IOException i) {
+            System.out.println(i);
         }
     }
 
