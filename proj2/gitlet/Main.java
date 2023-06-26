@@ -65,6 +65,7 @@ public class Main {
                 case "branch":
                     isGitletRepo();
                     validateNumArgs(args, 2);
+                    Repository.branch(args[1]);
                     break;
                 case "rm-branch":
                     isGitletRepo();

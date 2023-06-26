@@ -83,14 +83,18 @@ public class Repository {
 
     /** Get the HEAD hash code that means one of the branches is active */
     private static String getHeadHashCode() {
-        return Utils.readContentsAsString(HEAD);
+//        return Utils.readContentsAsString(HEAD);
+        String branchName = Utils.readContentsAsString(HEAD);
+        File branch = Utils.join(REFS, branchName);
+        return Utils.readContentsAsString(branch);
     }
 
     /** Update the content of HEAD and the current active branch */
     private static void updateHeadHashCode(String hash) {
-        File activeBranch = getPathOfActiveBranch();
-        Utils.writeContents(HEAD, hash);
-        Utils.writeContents(activeBranch, hash);
+        String activeBranch = getNameOfActiveBranch();
+        File activeBranchPath = Utils.join(REFS, activeBranch);
+        Utils.writeContents(HEAD, activeBranch);
+        Utils.writeContents(activeBranchPath, hash);
     }
 
     /**@Command: init
@@ -113,7 +117,7 @@ public class Repository {
     /** Serialize the initial commit object to the file system. */
     private static void serializeInitCommit(Commit c) throws IOException {
         String commitId = c.getCommitId();
-        Utils.writeContents(HEAD, commitId);
+        Utils.writeContents(HEAD, "master");
         Utils.writeContents(MASTER, commitId);
         File filePath = getObjectPath(commitId, COMMIT_OBJECTS);
         Utils.writeObject(filePath, c);
@@ -122,9 +126,10 @@ public class Repository {
     /** Serialize the commit object to the file system. */
     private static void serializeCommit(Commit c) throws IOException {
         String commitId = c.getCommitId();
-        Utils.writeContents(HEAD, commitId);
-        File currBranch = getPathOfActiveBranch();
-        Utils.writeContents(currBranch, commitId);
+//        Utils.writeContents(HEAD, commitId);
+//        File currBranch = Utils.join(REFS, getNameOfActiveBranch());
+//        Utils.writeContents(currBranch, commitId);
+        updateHeadHashCode(commitId);
         File commitPath = getObjectPath(commitId, COMMIT_OBJECTS);
         Utils.writeObject(commitPath, c);
     }
@@ -135,19 +140,20 @@ public class Repository {
         return Utils.readObject(commitPath, Commit.class);
     }
 
-    /** Get the filepath of the branch which is active by checking the HEAD */
-    private static File getPathOfActiveBranch() {
-        String currentHeadHashCode = getHeadHashCode();
-        String resultBranch = "";
-        for (String branch: Utils.plainFilenamesIn(REFS)) {
-            File branchpath = Utils.join(REFS, branch);
-            String content = Utils.readContentsAsString(branchpath);
-            if (currentHeadHashCode.equals(content)) {
-                resultBranch = branch;
-                break;
-            }
-        }
-        return Utils.join(REFS, resultBranch);
+    /** Get the name of the branch which is active by checking the HEAD */
+    private static String getNameOfActiveBranch() {
+//        String currentHeadHashCode = getHeadHashCode();
+//        String resultBranch = "";
+//        for (String branch: Utils.plainFilenamesIn(REFS)) {
+//            File branchpath = Utils.join(REFS, branch);
+//            String content = Utils.readContentsAsString(branchpath);
+//            if (currentHeadHashCode.equals(content)) {
+//                resultBranch = branch;
+//                break;
+//            }
+//        }
+//        return Utils.join(REFS, resultBranch);
+        return Utils.readContentsAsString(HEAD);
     }
 
     /** Given a hash code, then create relative directory and file
@@ -515,5 +521,19 @@ public class Repository {
             }
         }
         return commitId;
+    }
+
+    /**@Command branch
+     *
+     */
+    public static void branch(String branchName) {
+        for (String name: Utils.plainFilenamesIn(REFS)) {
+            if (branchName.equals(name)) {
+                System.out.println("A branch with that name already exists.");
+                System.exit(0);
+            }
+        }
+        File newBranch = Utils.join(REFS, branchName);
+        writeContents(newBranch, getHeadHashCode());
     }
 }
