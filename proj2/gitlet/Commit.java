@@ -1,6 +1,5 @@
 package gitlet;
 
-// TODO: any imports you need here
 
 import java.text.SimpleDateFormat;
 import java.util.Date; // TODO: You'll likely use this in this class
@@ -47,7 +46,6 @@ public class Commit implements Serializable, Dumpable {
         this.parentId.add(this.parentId.size(), parentId);
         this.commitId = Utils.sha1(this.toString());
     }
-    /* TODO: fill in the rest of this class. */
 
     @Override
     public String toString() {

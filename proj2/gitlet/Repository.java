@@ -7,17 +7,14 @@ import java.util.Arrays;
 import java.util.TreeMap;
 import static gitlet.Utils.*;
 
-// TODO: any imports you need here
 
 /** Represents a gitlet repository.
- *  TODO: It's a good idea to give a description here of what else this Class
  *  does at a high level.
  *
  *  @author EnzoGuang
  */
 public class Repository {
     /**
-     * TODO: add instance variables here.
      *
      * List all instance variables of the Repository class here with a useful
      * comment above them describing what that variable represents and how that
@@ -38,7 +35,6 @@ public class Repository {
     public static final File REMOVED_INDEX = join(INDEX, "removed");
     public static final File MASTER = join(REFS, "master");
 
-    /* TODO: fill in the rest of this class. */
     private static ArrayList<String> branch = new ArrayList<>();
 
 
@@ -235,7 +231,6 @@ public class Repository {
             fileMap.put(stagedFileName, hash);
             File storagePath = getObjectPath(hash, BLOB_OBJECTS);
             Utils.writeContents(storagePath, content);
-            //TODO 删除暂存区的文件
             File toBeDeleted = Utils.join(STAGED_INDEX, stagedFileName);
             toBeDeleted.delete();
         }
@@ -334,8 +329,6 @@ public class Repository {
                 String hashOfStaged = sha1(filename + stagedFileContent);
                 String hashOfCwd = sha1(filename + cwdFileContent);
                 if (!hashOfCwd.equals(hashOfStaged)) {
-//                    System.out.println(filename + " (not track in current commit but track " +
-//                            "next commit and content is different with staged version");
                     System.out.println(filename);
                 }
             }
@@ -350,8 +343,6 @@ public class Repository {
             }
         }
         System.out.println();
-        // TODO
-
     }
 
     /**@Command: rm
@@ -480,8 +471,8 @@ public class Repository {
             for (String file: fileBlobCheckout.keySet()) {
                 File cwdFile = Utils.join(CWD, file);
                 if (!fileBlobCurr.containsKey(file) && cwdFile.exists()) {
-                    System.out.println("There is an untracked file in the way; delete it" +
-                            ", or add and commit it first.");
+                    System.out.println("There is an untracked file in the way; delete it"
+                            + ", or add and commit it first.");
                     System.exit(0);
                 }
             }
