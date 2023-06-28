@@ -444,70 +444,15 @@ public class Repository {
                 System.out.println("No commit with that id exists");
                 System.exit(0);
             }
-            checkoutFile(extendAbbrevious(args[1]), args[3]);
+            String completeHash = extendAbbrHash(args[1]);
+            checkoutFile(completeHash, args[3]);
         } else if (flag == 3) {
-            String checkoutBranch = args[1];
-            if (!plainFilenamesIn(REFS).contains(checkoutBranch)) {
-                System.out.println("No such branch exists.");
-                System.exit(0);
-            }
-            File checkoutBranPath = Utils.join(REFS, checkoutBranch);
-            if (checkoutBranch.equals(readContentsAsString(HEAD))) {
-                System.out.println("No need to checkout the current branch.");
-                System.exit(0);
-            }
-            File currentBranPath = Utils.join(REFS, getNameOfActiveBranch());
-            String hashOfCheckoutBr = Utils.readContentsAsString(checkoutBranPath);
-            String hashOfCurrentBr = Utils.readContentsAsString(currentBranPath);
-            if (hashOfCurrentBr.equals(hashOfCheckoutBr)) {
-                writeContents(HEAD, checkoutBranch);
-                System.exit(0);
-            }
-            String commitId = readContentsAsString(checkoutBranPath);
-            Commit currentCommit = deSerializeCommit(getHeadHashCode());
-            TreeMap<String, String> fileBlobCurr = currentCommit.getFileBlob();
-            Commit checkoutCommit = deSerializeCommit(commitId);
-            TreeMap<String, String> fileBlobCheckout = checkoutCommit.getFileBlob();
-            for (String file: fileBlobCheckout.keySet()) {
-                File cwdFile = Utils.join(CWD, file);
-                if (!fileBlobCurr.containsKey(file) && cwdFile.exists()) {
-                    System.out.println("There is an untracked file in the way; delete it"
-                            + ", or add and commit it first.");
-                    System.exit(0);
-                }
-            }
-            /** Any files that are tracked in the current branch but are not present
-             * in the checked-out branch are deleted.
-             */
-            for (String filename: fileBlobCurr.keySet()) {
-                if (!fileBlobCheckout.containsKey(filename)) {
-                    File toBeDelete = Utils.join(CWD, filename);
-                    if (toBeDelete.exists()) {
-                        toBeDelete.delete();
-                    }
-                }
-            }
-            for (String filename: fileBlobCheckout.keySet()) {
-                File cwdFilePath = Utils.join(CWD, filename);
-                if (cwdFilePath.exists()) {
-                    cwdFilePath.delete();
-                }
-                String replacedFileHash = fileBlobCheckout.get(filename);
-                File toBeRepacedFile = getObjectPath(replacedFileHash, BLOB_OBJECTS);
-                String replacedContent = readContentsAsString(toBeRepacedFile);
-                writeContents(cwdFilePath, replacedContent);
-            }
-            for (String file: Utils.plainFilenamesIn(STAGED_INDEX)) {
-                File toBeDelete = Utils.join(STAGED_INDEX, file);
-                if (toBeDelete.exists()) {
-                    toBeDelete.delete();
-                }
-            }
-            writeContents(HEAD, checkoutBranch);
-
+            String checkoutBranchName = args[1];
+            checkoutBranch(checkoutBranchName);
         }
     }
 
+    /** checkout the files of the head commit or files of the specific commit. */
     private static void checkoutFile(String commitId, String filename) throws IOException {
         Commit currentCommit = deSerializeCommit(commitId);
         TreeMap<String, String> fileBlob = currentCommit.getFileBlob();
@@ -522,6 +467,82 @@ public class Repository {
             }
             String content = readContentsAsString(checkoutFile);
             Utils.writeContents(toBeReplacedFile, content);
+        }
+    }
+
+    private static void checkoutBranch(String checkoutBranchName) throws IOException {
+        checkoutBranchFailureCase(checkoutBranchName);
+        checkoutBranchOnlyFiles(checkoutBranchName);
+        /** modified the content of the HEAD, now HEAD point to the checkout branch */
+        writeContents(HEAD, checkoutBranchName);
+    }
+
+    /** Checks everything is correct with the branch name */
+    private static void checkoutBranchFailureCase(String checkoutBranchName) {
+        if (!plainFilenamesIn(REFS).contains(checkoutBranchName)) {
+            System.out.println("No such branch exists.");
+            System.exit(0);
+        }
+        File checkoutBranPath = Utils.join(REFS, checkoutBranchName);
+        if (checkoutBranchName.equals(readContentsAsString(HEAD))) {
+            System.out.println("No need to checkout the current branch.");
+            System.exit(0);
+        }
+        File currentBranPath = Utils.join(REFS, getNameOfActiveBranch());
+        String hashOfCheckoutBr = Utils.readContentsAsString(checkoutBranPath);
+        String hashOfCurrentBr = Utils.readContentsAsString(currentBranPath);
+        if (hashOfCurrentBr.equals(hashOfCheckoutBr)) {
+            writeContents(HEAD, checkoutBranchName);
+            System.exit(0);
+        }
+    }
+
+    /** checkout the branch, modified the current working directory but not modified the HEAD. */
+    private static void checkoutBranchOnlyFiles(String checkoutBranch) throws IOException {
+        File checkoutBranPath = Utils.join(REFS, checkoutBranch);
+        String commitId = readContentsAsString(checkoutBranPath);
+        checkoutWithCommitId(commitId);
+    }
+
+    private static void checkoutWithCommitId(String givenCommitId) throws IOException {
+        Commit currentCommit = deSerializeCommit(getHeadHashCode());
+        TreeMap<String, String> fileBlobCurr = currentCommit.getFileBlob();
+        Commit checkoutCommit = deSerializeCommit(givenCommitId);
+        TreeMap<String, String> fileBlobCheckout = checkoutCommit.getFileBlob();
+        for (String file: fileBlobCheckout.keySet()) {
+            File cwdFile = Utils.join(CWD, file);
+            if (!fileBlobCurr.containsKey(file) && cwdFile.exists()) {
+                System.out.println("There is an untracked file in the way; delete it"
+                        + ", or add and commit it first.");
+                System.exit(0);
+            }
+        }
+        /** Any files that are tracked in the current branch but are not present
+         * in the checked-out branch are deleted.
+         */
+        for (String filename: fileBlobCurr.keySet()) {
+            if (!fileBlobCheckout.containsKey(filename)) {
+                File toBeDelete = Utils.join(CWD, filename);
+                if (toBeDelete.exists()) {
+                    toBeDelete.delete();
+                }
+            }
+        }
+        for (String filename: fileBlobCheckout.keySet()) {
+            File cwdFilePath = Utils.join(CWD, filename);
+            if (cwdFilePath.exists()) {
+                cwdFilePath.delete();
+            }
+            String replacedFileHash = fileBlobCheckout.get(filename);
+            File toBeRepacedFile = getObjectPath(replacedFileHash, BLOB_OBJECTS);
+            String replacedContent = readContentsAsString(toBeRepacedFile);
+            writeContents(cwdFilePath, replacedContent);
+        }
+        for (String file: Utils.plainFilenamesIn(STAGED_INDEX)) {
+            File toBeDelete = Utils.join(STAGED_INDEX, file);
+            if (toBeDelete.exists()) {
+                toBeDelete.delete();
+            }
         }
     }
 
@@ -544,8 +565,8 @@ public class Repository {
         return resultPath;
     }
 
-    /** Extend the bits of the commitId. */
-    public static String extendAbbrevious(String commitId) {
+    /** Extend the abbreviates bits of the commitId. */
+    private static String extendAbbrHash(String commitId) {
         if (commitId.length() != 40) {
             File path = Utils.join(COMMIT_OBJECTS, commitId.substring(0, 2));
             String restSubCommitId = commitId.substring(2);
@@ -559,7 +580,9 @@ public class Repository {
     }
 
     /**@Command branch
-     *
+     * @Usage: java gitlet.Main branch [branch name]
+     * @Description: Create a new branch with the given name, and points it at the
+     * current head commit.
      */
     public static void branch(String branchName) {
         for (String name: Utils.plainFilenamesIn(REFS)) {
@@ -570,5 +593,23 @@ public class Repository {
         }
         File newBranch = Utils.join(REFS, branchName);
         writeContents(newBranch, getHeadHashCode());
+    }
+
+    /**@Command rm-branch
+     * @Usage: java gitlet.Main rm-branch [branch name]
+     */
+    public static void rm_branch(String branchName) {
+        if (!Utils.plainFilenamesIn(REFS).contains(branchName)) {
+            System.out.println("A branch with that name does not exist.");
+            System.exit(0);
+        }
+        if (Utils.readContentsAsString(HEAD).equals(branchName)) {
+            System.out.println("Cannot remove the current branch.");
+            System.exit(0);
+        }
+        File branchPath = Utils.join(REFS, branchName);
+        if (branchPath.exists()) {
+            branchPath.delete();
+        }
     }
 }

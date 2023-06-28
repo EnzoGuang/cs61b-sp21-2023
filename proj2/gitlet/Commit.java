@@ -24,10 +24,10 @@ public class Commit implements Serializable, Dumpable {
 
     /** The message of this Commit. */
     private final String message;
-    private String timestamp;
+    private final String timestamp;
     private TreeMap<String, String> fileBlob = new TreeMap<>();
     private ArrayList<String> parentId = new ArrayList<>();
-    private String commitId;
+    private final String commitId;
 
     public Commit(String message) {
         this.message = message;

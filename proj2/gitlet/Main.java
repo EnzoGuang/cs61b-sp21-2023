@@ -70,6 +70,7 @@ public class Main {
                 case "rm-branch":
                     isGitletRepo();
                     validateNumArgs(args, 2);
+                    Repository.rm_branch(args[1]);
                     break;
                 case "reset":
                     isGitletRepo();
