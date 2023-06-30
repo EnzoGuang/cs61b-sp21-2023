@@ -299,41 +299,40 @@ public class Repository {
         System.out.println("=== Modifications Not Staged For Commit ===");
         Commit currentCommit = deSerializeCommit(getHeadHashCode());
         TreeMap<String, String> fileBlob = currentCommit.getFileBlob();
-//        for (String filename: fileBlob.keySet()) {
-//            File cwdFilePath = Utils.join(CWD, filename);
-//            if (cwdFilePath.exists()) {
-//                String fileContent = Utils.readContentsAsString(cwdFilePath);
-//                String hashOfcwdFile = calcHashOfFile(filename, fileContent);
-//                if (Utils.plainFilenamesIn(STAGED_INDEX).contains(filename)) {
-//                    File stagedFilePath = Utils.join(STAGED_INDEX, filename);
-//                    String stagedFileContent = Utils.readContentsAsString(stagedFilePath);
-//                    String hashOfStagedFile = calcHashOfFile(filename, stagedFileContent);
-//                    if (!hashOfStagedFile.equals(hashOfcwdFile)) {
-//                        System.out.println(filename + " (modified)");
-//                    }
-//                } else {
-//                    if (!hashOfcwdFile.equals(fileBlob.get(filename))) {
-//                        System.out.println(filename + " (modified)");
-//                    }
-//                }
-//            } else {
-//                System.out.println(filename + " (deleted)");
-//            }
-//        }
-//        for (String filename: plainFilenamesIn(STAGED_INDEX)) {
-//            if (!fileBlob.containsKey(filename)) {
-//                File stagedFilePath = Utils.join(STAGED_INDEX, filename);
-//                File cwdFilePath = Utils.join(CWD, filename);
-//                String stagedFileContent = Utils.readContentsAsString(stagedFilePath);
-//                String cwdFileContent = Utils.readContentsAsString(cwdFilePath);
-//                String hashOfStaged = sha1(filename + stagedFileContent);
-//                String hashOfCwd = sha1(filename + cwdFileContent);
-//                if (!hashOfCwd.equals(hashOfStaged)) {
-//                    System.out.println(filename);
-//                }
-//            }
-//        }
-
+        for (String filename: fileBlob.keySet()) {
+            File cwdFilePath = Utils.join(CWD, filename);
+            if (cwdFilePath.exists()) {
+                String fileContent = Utils.readContentsAsString(cwdFilePath);
+                String hashOfcwdFile = calcHashOfFile(filename, fileContent);
+                if (Utils.plainFilenamesIn(STAGED_INDEX).contains(filename)) {
+                    File stagedFilePath = Utils.join(STAGED_INDEX, filename);
+                    String stagedFileContent = Utils.readContentsAsString(stagedFilePath);
+                    String hashOfStagedFile = calcHashOfFile(filename, stagedFileContent);
+                    if (!hashOfStagedFile.equals(hashOfcwdFile)) {
+                        System.out.println(filename + " (modified)");
+                    }
+                } else {
+                    if (!hashOfcwdFile.equals(fileBlob.get(filename))) {
+                        System.out.println(filename + " (modified)");
+                    }
+                }
+            } else {
+                System.out.println(filename + " (deleted)");
+            }
+        }
+        for (String filename: plainFilenamesIn(STAGED_INDEX)) {
+            if (!fileBlob.containsKey(filename)) {
+                File stagedFilePath = Utils.join(STAGED_INDEX, filename);
+                File cwdFilePath = Utils.join(CWD, filename);
+                String stagedFileContent = Utils.readContentsAsString(stagedFilePath);
+                String cwdFileContent = Utils.readContentsAsString(cwdFilePath);
+                String hashOfStaged = sha1(filename + stagedFileContent);
+                String hashOfCwd = sha1(filename + cwdFileContent);
+                if (!hashOfCwd.equals(hashOfStaged)) {
+                    System.out.println(filename);
+                }
+            }
+        }
         System.out.println();
         System.out.println("=== Untracked Files ===");
         for (String cwdFile: Utils.plainFilenamesIn(CWD)) {
