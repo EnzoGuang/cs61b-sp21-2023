@@ -297,8 +297,8 @@ public class Repository {
         }
         System.out.println();
         System.out.println("=== Modifications Not Staged For Commit ===");
-//        Commit currentCommit = deSerializeCommit(getHeadHashCode());
-//        TreeMap<String, String> fileBlob = currentCommit.getFileBlob();
+        Commit currentCommit = deSerializeCommit(getHeadHashCode());
+        TreeMap<String, String> fileBlob = currentCommit.getFileBlob();
 //        for (String filename: fileBlob.keySet()) {
 //            File cwdFilePath = Utils.join(CWD, filename);
 //            if (cwdFilePath.exists()) {
@@ -336,13 +336,13 @@ public class Repository {
 
         System.out.println();
         System.out.println("=== Untracked Files ===");
-//        for (String cwdFile: Utils.plainFilenamesIn(CWD)) {
-//            boolean stageAreaContain = plainFilenamesIn(STAGED_INDEX).contains(cwdFile);
-//            if (!fileBlob.containsKey(cwdFile) && !stageAreaContain) {
-//                System.out.println(cwdFile);
-//            }
-//        }
-//        System.out.println();
+        for (String cwdFile: Utils.plainFilenamesIn(CWD)) {
+            boolean stageAreaContain = plainFilenamesIn(STAGED_INDEX).contains(cwdFile);
+            if (!fileBlob.containsKey(cwdFile) && !stageAreaContain) {
+                System.out.println(cwdFile);
+            }
+        }
+        System.out.println();
     }
 
     /**@Command: rm
