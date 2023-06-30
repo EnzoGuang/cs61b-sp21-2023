@@ -546,6 +546,26 @@ public class Repository {
         }
     }
 
+    /**@Usage: java gitlet.Main reset [commit id]
+     * @Description: Checks out all files by the given commit. The command is
+     * essentially checkout of an arbitrary commit that also changes the current
+     * branch head.
+     * @param commitId
+     * @throws IOException
+     */
+    public static void reset(String commitId) throws IOException {
+        File commitPath = isCommitExists(commitId);
+        if (!commitPath.exists()) {
+            System.out.println("No commit with that id exists.");
+            System.exit(0);
+        }
+        String completeCommitId = extendAbbrHash(commitId);
+        checkoutWithCommitId(completeCommitId);
+        String currentBranch = Utils.readContentsAsString(HEAD);
+        File branchPath = Utils.join(REFS, currentBranch);
+        Utils.writeContents(branchPath, completeCommitId);
+    }
+
     /** Estimate the given commitId whether exists. */
     private static File isCommitExists(String commitId) {
         File resultPath = Utils.join(COMMIT_OBJECTS, commitId.substring(0, 2));

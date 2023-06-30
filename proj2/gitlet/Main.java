@@ -75,6 +75,7 @@ public class Main {
                 case "reset":
                     isGitletRepo();
                     validateNumArgs(args, 2);
+                    Repository.reset(args[1]);
                     break;
                 case "merge":
                     isGitletRepo();
