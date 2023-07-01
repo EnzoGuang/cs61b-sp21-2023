@@ -633,4 +633,65 @@ public class Repository {
             branchPath.delete();
         }
     }
+
+    /** Get the all commit of the given branch name. */
+    private static ArrayList<String> getCommitFromBranch(String branchName) throws IOException {
+        if (!Utils.plainFilenamesIn(REFS).contains(branchName)) {
+            System.exit(0);
+        }
+        File branchPath = Utils.join(REFS, branchName);
+        String commitId = Utils.readContentsAsString(branchPath);
+        Commit commit = deSerializeCommit(commitId);
+        ArrayList<String> list = new ArrayList<>();
+        while (commit.getParentId().size() != 0) {
+            list.add(commit.getCommitId());
+            String parentId = commit.getParentId().get(0);
+            commit = deSerializeCommit(parentId);
+        }
+        list.add(commit.getCommitId());
+        return list;
+    }
+
+    /** Generate a graph that all the vertices are consist of the given branch's
+     * commit
+     */
+    private static Graph generateGraph(String branchName) throws IOException {
+        ArrayList<String> list = getCommitFromBranch(branchName);
+        Graph graph = new Graph(list);
+        for (int i = 0; i < list.size() - 1; i++) {
+            graph.addEdge(list.get(i), list.get(i + 1));
+        }
+        return graph;
+    }
+
+    /** Using Breadth First Search Algorithm to calculate the distance from every
+     * vertex to the start vertex which is the current branch's head.
+     */
+    private static TreeMap<String, Integer> getDistanceMap(String branchName) throws IOException {
+        Graph graph = generateGraph(branchName);
+        File branch = Utils.join(REFS, branchName);
+        String content = Utils.readContentsAsString(branch);
+        BreadthFirstSearch bfsPath = new BreadthFirstSearch(graph, content);
+        bfsPath.bfs(graph, content);
+        TreeMap<String, Integer> dist = bfsPath.getDistTo();
+        System.out.println(branchName + ": " + dist);
+        return dist;
+    }
+
+    /** Get the split point's hashcode */
+    public static String getSplitPoint(String currentBranch, String mergeBranch) throws IOException {
+        TreeMap<String, Integer> currBranMap = getDistanceMap(currentBranch);
+        TreeMap<String, Integer> mergeBranMap = getDistanceMap(mergeBranch);
+        String commitId = null;
+        int minDist = 1000000;
+        for (String id: currBranMap.keySet()) {
+            if (mergeBranMap.containsKey(id)) {
+                if (currBranMap.get(id) < minDist) {
+                    minDist = currBranMap.get(id);
+                    commitId = id;
+                }
+            }
+        }
+        return commitId;
+    }
 }
